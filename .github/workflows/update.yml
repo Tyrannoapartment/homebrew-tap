@@ -1,0 +1,66 @@
+name: update formulae
+
+# Deploy keys and cross-repo PATs are both off the table here, so the tap
+# updates itself: it polls the upstream release and pushes with its own token.
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Point at the newest ai-usage release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          repo=Tyrannoapartment/ai-usage
+          version=$(gh release view --repo "$repo" --json tagName --jq '.tagName' | sed 's/^v//')
+          [ -n "$version" ] || { echo "no release found"; exit 1; }
+          echo "upstream release: $version"
+
+          current=$(grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+\.tar\.gz' Formula/ai-usage.rb \
+                    | head -1 | sed -E 's/v([0-9.]+)\.tar\.gz/\1/')
+          echo "formula currently at: ${current:-unknown}"
+
+          tarball="https://github.com/$repo/archive/refs/tags/v${version}.tar.gz"
+          src_sha=$(curl -sSL "$tarball" | shasum -a 256 | cut -d' ' -f1)
+          sed -i '' -E \
+            -e "s|/archive/refs/tags/v[0-9.]+\.tar\.gz|/archive/refs/tags/v${version}.tar.gz|" \
+            -e "s|sha256 \"[a-f0-9]{64}\"|sha256 \"${src_sha}\"|" \
+            Formula/ai-usage.rb
+
+          # The cask only moves when a release actually ships the app.
+          asset="AIUsage-${version}.zip"
+          if gh release view "v${version}" --repo "$repo" --json assets \
+               --jq '.assets[].name' | grep -qx "$asset"; then
+            tmp=$(mktemp -d)
+            gh release download "v${version}" --repo "$repo" --pattern "$asset" --dir "$tmp"
+            app_sha=$(shasum -a 256 "$tmp/$asset" | cut -d' ' -f1)
+            sed -i '' -E \
+              -e "s|version \"[0-9.]+\"|version \"${version}\"|" \
+              -e "s|sha256 \"[a-f0-9]{64}\"|sha256 \"${app_sha}\"|" \
+              Casks/ai-usage-app.rb
+            echo "cask updated to $version"
+          else
+            echo "release $version ships no app bundle; leaving the cask alone"
+          fi
+
+      - name: Commit if anything moved
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "already up to date"
+          else
+            git commit -aqm "ai-usage: follow the latest release"
+            git push --quiet
+            echo "pushed"
+          fi
