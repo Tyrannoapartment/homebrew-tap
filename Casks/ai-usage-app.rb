@@ -9,7 +9,7 @@ cask "ai-usage-app" do
 
   # The app shells out to the `ai-usage` tool for every reading.
   depends_on formula: "tyrannoapartment/tap/ai-usage"
-  depends_on macos: ">= :monterey"
+  depends_on macos: :monterey
 
   app "AIUsage.app"
 
