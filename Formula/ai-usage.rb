@@ -1,8 +1,8 @@
 class AiUsage < Formula
   desc "Live terminal dashboard for Claude and Codex quota usage"
   homepage "https://github.com/Tyrannoapartment/ai-usage"
-  url "https://github.com/Tyrannoapartment/ai-usage/archive/refs/tags/v0.5.0.tar.gz"
-  sha256 "f833f6b3cbedd928fb42bc789448a2f7b3617e568a06c8eab7f4e74e8d85c926"
+  url "https://github.com/Tyrannoapartment/ai-usage/archive/refs/tags/v0.6.0.tar.gz"
+  sha256 "f28e399866200f657256bb29d7d1d43ebe9ec7b8fb415587c1ab4348f4e4e5cf"
   license "MIT"
   head "https://github.com/Tyrannoapartment/ai-usage.git", branch: "main"
 
