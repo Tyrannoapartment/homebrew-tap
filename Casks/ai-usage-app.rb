@@ -1,6 +1,6 @@
 cask "ai-usage-app" do
-  version "0.7.0"
-  sha256 "cf49ceeaf6093fec98ca1221a4d3ada4f98318d3e84b42c8b1d133b5967ee96c"
+  version "0.7.1"
+  sha256 "529452b1b05ad0430aaffd17067af91814ddda690d4894de1c686cfa851d4edf"
 
   url "https://github.com/Tyrannoapartment/ai-usage/releases/download/v#{version}/AIUsage-#{version}.zip"
   name "AI Usage"
